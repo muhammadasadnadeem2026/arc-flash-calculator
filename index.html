@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arc-Flash Calculator (IEEE 1584-2018)</title>
+<meta name="description" content="Incident energy, arcing current and arc-flash boundary to IEEE 1584-2018, with NFPA 70E clothing levels and a label preview.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root { --bg:#0A0A14; --panel:#13131F; --panel2:#1A1A28; --line:#26263A; --fg:#EDEDF3; --muted:#8A8AA3; --accent:#F2A93B; --on:#0A0A14; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 Inter, system-ui, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 18px; font-weight: 700; } header h1 b { color: var(--accent); }
+  header a { color: var(--muted); text-decoration: none; font-size: 13px; } header a:hover { color: var(--accent); }
+  .wrap { display: grid; grid-template-columns: 330px 1fr; min-height: calc(100vh - 54px); }
+  aside { border-right: 1px solid var(--line); padding: 16px; overflow: auto; max-height: calc(100vh - 54px); }
+  main { padding: 16px; overflow: auto; }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 12px; padding: 10px 12px 12px; }
+  legend { font: 600 11px/1 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding: 0 6px; }
+  label { display: grid; grid-template-columns: 1fr 120px; align-items: center; gap: 8px; margin: 6px 0; color: var(--muted); font-size: 13px; }
+  input, select { width: 100%; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font: 600 12px Inter, sans-serif; cursor: pointer; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 0 0 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .card small { display: block; color: var(--muted); font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
+  .card b { font: 600 22px 'JetBrains Mono', monospace; } .card span { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .card em { display: block; color: var(--muted); font-style: normal; font-size: 12px; }
+  .flag { margin: 0 0 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid #5a4210; background: #241a08; color: #F6C66E; font-size: 13px; }
+  .grid2 { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 16px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  .label { background: #fff; color: #111; border-radius: 6px; overflow: hidden; font-family: Arial, Helvetica, sans-serif; }
+  .label .hd { font: 900 30px/1 Arial; text-align: center; padding: 12px 8px; letter-spacing: .04em; color: #000; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .label .hd.warn { background: #F7A600; } .label .hd.danger { background: #D7261E; color: #fff; }
+  .label .tri { width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 28px solid #000; position: relative; }
+  .label .hd.danger .tri { border-bottom-color: #fff; }
+  .label .bd { padding: 12px 14px; font-size: 14px; } .label .bd b { font-size: 16px; } .label .bd div { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0; }
+  .label .ft { padding: 8px 14px 12px; font-size: 11px; color: #444; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font: 600 11px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+  td.n { font-family: 'JetBrains Mono', monospace; text-align: right; }
+  h2 { font-size: 15px; margin: 18px 0 8px; } .note { color: var(--muted); font-size: 12px; }
+  svg text { font-family: Inter, Arial, sans-serif; }
+  @media (max-width: 980px) { .wrap, .grid2 { grid-template-columns: 1fr; } aside { max-height: none; border-right: 0; border-bottom: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Arc-Flash <b>Calculator</b> · IEEE 1584-2018</h1>
+  <a href="https://github.com/muhammadasadnadeem2026/arc-flash-calculator" target="_blank" rel="noopener">Source on GitHub ↗</a>
+</header>
+<div class="wrap">
+  <aside>
+    <form id="f" autocomplete="off">
+      <fieldset><legend>Equipment</legend>
+        <label>Equipment type <select name="eq" id="eq"></select></label>
+        <label>Label / location <input name="name" value="LV switchboard SB-A1"></label>
+        <label>Electrode config. <select name="EC"><option value="VCB">VCB (vertical, in box)</option><option value="VCBB">VCBB (vertical, barrier)</option><option value="HCB">HCB (horizontal, in box)</option><option value="VOA">VOA (vertical, open air)</option><option value="HOA">HOA (horizontal, open air)</option></select></label>
+      </fieldset>
+      <fieldset><legend>System</legend>
+        <label>Voltage (V, line-line) <input name="V" type="number" min="208" max="15000" value="480"></label>
+        <label>Bolted fault (kA) <input name="Ibf" type="number" step="0.1" min="0.2" max="106" value="45"></label>
+        <label>Clearing time at full arcing current (ms) <input name="T" type="number" step="0.1" min="1" max="2000" value="61.3"></label>
+        <label>Clearing time at reduced arcing current (ms) <input name="Tmin" type="number" step="0.1" min="1" max="2000" value="319"></label>
+      </fieldset>
+      <fieldset><legend>Geometry</legend>
+        <label>Conductor gap G (mm) <input name="G" type="number" step="0.1" value="32"></label>
+        <label>Working distance D (mm) <input name="D" type="number" step="0.1" value="609.6"></label>
+        <label>Enclosure height (mm) <input name="h" type="number" value="610"></label>
+        <label>Enclosure width (mm) <input name="w" type="number" value="610"></label>
+        <label>Enclosure depth (mm) <input name="d" type="number" value="254"></label>
+      </fieldset>
+    </form>
+    <div class="row"><button type="button" id="exLV">IEEE example D.2 (480 V)</button><button type="button" id="exHV">IEEE example D.1 (4.16 kV)</button></div>
+    <p class="note">The two clearing times come from the protective device's time-current curve at the full and at the reduced arcing current; the reduced current can land on a much slower part of the curve, which is why it is checked too. Results are for study and training. A labelled study needs the full system model, device settings and a qualified engineer.</p>
+  </aside>
+  <main>
+    <div id="flags"></div>
+    <div class="cards" id="cards"></div>
+    <div class="grid2">
+      <div>
+        <div class="label" id="label"></div>
+        <p class="note" style="margin-top:8px">Label preview: worst case of the two arcing-current cases.</p>
+      </div>
+      <div class="panel">
+        <svg id="chart" viewBox="0 0 640 360" width="100%" role="img" aria-label="Incident energy against clearing time"></svg>
+      </div>
+    </div>
+    <h2>Working</h2>
+    <table id="steps"></table>
+    <p class="note">Method: IEEE 1584-2018. Arcing current from Eq. 1 at 600 V, 2.7 kV and 14.3 kV (interpolated above 600 V, Eq. 25 below), enclosure size correction from Eqs. 11–15, incident energy from Eqs. 3–6 and the arc-flash boundary at 1.2 cal/cm² from Eqs. 7–10. The reduced case uses the arcing current variation factor (Eq. 2). Clothing levels follow the NFPA 70E incident energy method. JavaScript port of the MIT-licensed <a href="https://github.com/LiaungYip/arcflash" style="color:var(--accent)">arcflash</a> library, checked against the standard's Annex D worked examples.</p>
+  </main>
+</div>
+<script src="ieee1584.js"></script>
+<script>
+'use strict';
+const A = window.IEEE1584, form = document.getElementById('f'), eqSel = document.getElementById('eq');
+eqSel.innerHTML = '<option value="">Custom</option>' + Object.keys(A.EQUIPMENT).map((k) => `<option>${k}</option>`).join('');
+eqSel.value = 'LV switchgear';
+eqSel.onchange = () => {
+  const e = A.EQUIPMENT[eqSel.value]; if (!e) return;
+  Object.assign(form.elements, {});
+  form.elements.G.value = e.G; form.elements.D.value = e.D; form.elements.h.value = e.h; form.elements.w.value = e.w; form.elements.d.value = e.d;
+  form.elements.V.value = Math.round(e.V * 1000); render();
+};
+const setAll = (o) => { for (const [k, v] of Object.entries(o)) form.elements[k].value = v; eqSel.value = ''; render(); };
+document.getElementById('exLV').onclick = () => setAll({ V: 480, Ibf: 45, EC: 'VCB', G: 32, D: 609.6, h: 610, w: 610, d: 254, T: 61.3, Tmin: 319, name: 'IEEE 1584 example D.2' });
+document.getElementById('exHV').onclick = () => setAll({ V: 4160, Ibf: 15, EC: 'VCB', G: 104, D: 914.4, h: 1143, w: 762, d: 508, T: 197, Tmin: 223, name: 'IEEE 1584 example D.1' });
+
+const f1 = (x, n = 1) => Number(x).toLocaleString('en-US', { maximumFractionDigits: n, minimumFractionDigits: n });
+const ftin = (mm) => { const inch = mm / 25.4; return `${Math.floor(inch / 12)} ft ${Math.round(inch % 12)} in`; };
+function render() {
+  const v = Object.fromEntries(new FormData(form));
+  const p = { V: +v.V / 1000, Ibf: +v.Ibf, EC: v.EC, G: +v.G, D: +v.D, h: +v.h, w: +v.w, d: +v.d };
+  let full, red;
+  try { full = A.calc({ ...p, T: +v.T }); red = A.calc({ ...p, T: +v.Tmin, reduced: true }); } catch (e) { document.getElementById('flags').innerHTML = `<div class="flag">⚠ ${e.message}</div>`; return; }
+  const worst = full.E >= red.E ? { r: full, name: 'full arcing current' } : { r: red, name: 'reduced arcing current' };
+  const W = worst.r, afb = Math.max(full.AFB, red.AFB), ppe = A.ppe(W.cal);
+  document.getElementById('flags').innerHTML = [...new Set([...full.warnings, ...red.warnings])].map((x) => `<div class="flag">⚠ ${x}</div>`).join('');
+  const card = (k, b, u, em) => `<div class="card"><small>${k}</small><b>${b}</b><span>${u}</span>${em ? `<em>${em}</em>` : ''}</div>`;
+  document.getElementById('cards').innerHTML =
+    card('Incident energy', f1(W.cal, 2), 'cal/cm²', `worst case: ${worst.name}`) +
+    card('Arc-flash boundary', f1(afb / 1000, 2), 'm', ftin(afb)) +
+    card('Arcing current', `${f1(full.Iarc, 2)} / ${f1(red.Iarc, 2)}`, 'kA', 'full / reduced') +
+    card('Clothing', ppe.level.replace('Arc rating ', ''), '', 'NFPA 70E incident energy method');
+  const danger = W.cal > 40;
+  document.getElementById('label').innerHTML = `<div class="hd ${danger ? 'danger' : 'warn'}"><span class="tri"></span>${danger ? 'DANGER' : 'WARNING'}</div>
+    <div class="bd"><b>Arc flash and shock hazard</b>
+      <div><span>Location</span><span>${(v.name || '').replace(/</g, '&lt;')}</span></div>
+      <div><span>Incident energy at ${f1(+v.D / 25.4, 0)} in</span><b>${f1(W.cal, 1)} cal/cm²</b></div>
+      <div><span>Arc-flash boundary</span><b>${ftin(afb)}</b></div>
+      <div><span>Required clothing</span><span>${ppe.level}</span></div>
+      <div><span>Shock hazard</span><span>${f1(+v.V, 0)} V</span></div></div>
+    <div class="ft">${ppe.note}</div>`;
+  // chart: incident energy vs clearing time at both arcing currents
+  const svg = document.getElementById('chart'), X0 = 52, X1 = 620, Y0 = 20, Y1 = 320, tMax = Math.max(500, +v.T * 1.5, +v.Tmin * 1.5);
+  const eMax = Math.max(45, ...[full, red].map((r) => (r.cal / ((r === full ? +v.T : +v.Tmin) || 1)) * tMax)) * 1.05;
+  const sx = (t) => X0 + (t / tMax) * (X1 - X0), sy = (e) => Y1 - (e / eMax) * (Y1 - Y0);
+  let g = '';
+  for (let i = 0; i <= 5; i++) { const t = (tMax / 5) * i; g += `<line x1="${sx(t)}" y1="${Y0}" x2="${sx(t)}" y2="${Y1}" stroke="#26263A"/><text x="${sx(t)}" y="${Y1 + 16}" font-size="11" fill="#8A8AA3" text-anchor="middle">${Math.round(t)}</text>`; }
+  for (const lvl of [1.2, 4, 8, 25, 40]) if (lvl < eMax) g += `<line x1="${X0}" y1="${sy(lvl)}" x2="${X1}" y2="${sy(lvl)}" stroke="#5a4210" stroke-dasharray="4 4"/><text x="${X0 - 6}" y="${sy(lvl) + 4}" font-size="10" fill="#8A8AA3" text-anchor="end">${lvl}</text>`;
+  const series = [[full, +v.T, '#F2A93B', 'full arcing current'], [red, +v.Tmin, '#3987E5', 'reduced arcing current']];
+  series.forEach(([r, t, col, name], i) => {
+    const perMs = r.cal / t;   // energy is proportional to arcing time (Eqs. 3-6)
+    g += `<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(tMax)}" y2="${sy(perMs * tMax)}" stroke="${col}" stroke-width="2.5"/>`;
+    g += `<circle cx="${sx(t)}" cy="${sy(r.cal)}" r="5" fill="${col}"/><text x="${sx(t) + 8}" y="${sy(r.cal) - 8}" font-size="11" fill="#EDEDF3">${f1(r.cal, 1)} cal/cm² at ${t} ms</text>`;
+    g += `<rect x="${X0 + 10}" y="${Y0 + 6 + i * 18}" width="14" height="4" fill="${col}"/><text x="${X0 + 30}" y="${Y0 + 12 + i * 18}" font-size="11" fill="#B9B9CC">${name}</text>`;
+  });
+  g += `<line x1="${X0}" y1="${Y1}" x2="${X1}" y2="${Y1}" stroke="#34344F"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1}" stroke="#34344F"/>`;
+  g += `<text x="${(X0 + X1) / 2}" y="${Y1 + 34}" font-size="12" fill="#B9B9CC" text-anchor="middle">Clearing time (ms)</text><text x="14" y="${(Y0 + Y1) / 2}" font-size="12" fill="#B9B9CC" text-anchor="middle" transform="rotate(-90 14 ${(Y0 + Y1) / 2})">Incident energy (cal/cm²)</text>`;
+  svg.innerHTML = g;
+  const rows = [
+    ['Enclosure', `${full.enclosure}${full.EES ? `, equivalent size ${f1(full.EES, 3)} in` : ''}`, `CF = ${f1(full.CF, 3)}`],
+    ['Arcing current at 600 V', 'Eq. 1', `${f1(full.Iarc600, 3)} kA`],
+    ...(full.lv ? [] : [['Arcing current at 2.7 kV / 14.3 kV', 'Eq. 1', `${f1(full.Iarc2700, 3)} / ${f1(full.Iarc14300, 3)} kA`]]),
+    ['Final arcing current (full)', full.lv ? 'Eq. 25' : 'Eqs. 16-18', `${f1(full.Iarc, 3)} kA`],
+    ['Variation factor VarCF', 'Eq. 2', `${f1(full.VarCF, 3)} → × ${f1(1 - 0.5 * full.VarCF, 3)}`],
+    ['Reduced arcing current', '', `${f1(red.Iarc, 3)} kA`],
+    ['Incident energy (full, ' + v.T + ' ms)', full.lv ? 'Eq. 6' : 'Eqs. 3-5, 19-21', `${f1(full.E, 3)} J/cm² = ${f1(full.cal, 2)} cal/cm²`],
+    ['Incident energy (reduced, ' + v.Tmin + ' ms)', '', `${f1(red.E, 3)} J/cm² = ${f1(red.cal, 2)} cal/cm²`],
+    ['Arc-flash boundary (full / reduced)', 'Eqs. 7-10', `${f1(full.AFB, 0)} / ${f1(red.AFB, 0)} mm`],
+  ];
+  document.getElementById('steps').innerHTML = '<tr><th>Step</th><th>Equation</th><th style="text-align:right">Result</th></tr>' + rows.map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n">${r[2]}</td></tr>`).join('');
+}
+form.addEventListener('input', (e) => { if (e.target !== eqSel) { if (['G', 'D', 'h', 'w', 'd'].includes(e.target.name)) eqSel.value = ''; render(); } });
+for (const [k, val] of new URLSearchParams(location.search)) if (form.elements[k]) form.elements[k].value = val;
+render();
+</script>
+</body>
+</html>
